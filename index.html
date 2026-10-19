@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PriceMatch AI — Live Product Checker</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#172033;--muted:#647089;--line:#dce3ef;--accent:#6558e8;--good:#15865b;--bad:#c64755}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px Inter,system-ui,sans-serif}.top{background:#fff;border-bottom:1px solid var(--line);padding:18px max(22px,calc((100% - 1100px)/2));font-weight:850;font-size:19px}.top span{color:var(--accent)}main{max-width:1100px;margin:auto;padding:36px 22px}.eyebrow{font-size:12px;color:var(--accent);font-weight:800;letter-spacing:1.4px}h1{font-size:clamp(30px,4vw,44px);letter-spacing:-1.5px;margin:12px 0}p{line-height:1.6;color:var(--muted)}.intro{max-width:720px;margin-bottom:24px}.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:20px;align-items:start}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 10px 32px #1720330a}.head{padding:18px 21px;border-bottom:1px solid var(--line);font-weight:800}.body{padding:20px}.field{margin-bottom:16px}label{display:block;font-size:13px;font-weight:750;margin-bottom:7px}input{width:100%;border:1px solid var(--line);border-radius:10px;padding:13px;font:inherit;min-width:0}input:focus{outline:2px solid #8b80ff55;border-color:var(--accent)}.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}.btn{width:100%;padding:14px;border:0;border-radius:11px;background:var(--accent);color:#fff;font-weight:800;font-size:14px;cursor:pointer}.btn:disabled{opacity:.6;cursor:wait}.threshold{display:flex;gap:12px;align-items:center;margin:8px 0 18px;color:var(--muted);font-size:13px}.threshold input{width:75px}.notice{background:#f2f0ff;border-radius:10px;padding:12px;font-size:12px;color:#5146b6;line-height:1.5;margin-top:14px}.result-empty{text-align:center;padding:42px 20px}.result-empty b{display:block;margin-bottom:8px}.result{display:none}.result.show{display:block}.status{padding:18px 20px;border-bottom:1px solid var(--line)}.status h2{font-size:21px;margin:0 0 6px}.status p{margin:0;font-size:13px}.status.good h2{color:var(--good)}.status.bad h2{color:var(--bad)}.content{padding:20px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{border:1px solid var(--line);border-radius:11px;padding:12px;overflow-wrap:anywhere}.stat small{display:block;color:var(--muted);font-size:10px;margin-bottom:7px}.stat strong{font-size:13px}.sub{font-size:12px;font-weight:850;margin:22px 0 10px}.spec{display:grid;grid-template-columns:.8fr 1fr 1fr 22px;gap:7px;padding:10px 0;border-bottom:1px solid var(--line);font-size:11px;overflow-wrap:anywhere}.spec .muted{color:var(--muted)}.err{display:none;background:#fff0f0;color:#9d2431;border-radius:10px;padding:12px;font-size:13px;line-height:1.5;margin-bottom:14px}.err.show{display:block}.foot{font-size:11px;color:var(--muted);margin-top:20px}@media(max-width:780px){.grid{grid-template-columns:1fr}}@media(max-width:480px){main{padding:25px 14px}.pair{grid-template-columns:1fr}.spec{grid-template-columns:.7fr 1fr 1fr 18px;font-size:10px}.top{padding:16px 14px}}
+</style></head><body>
+<header class="top">↔ PriceMatch <span>AI</span></header>
+<main><div class="eyebrow">LIVE PRODUCT COMPARISON</div><h1>Check whether two products qualify for a price match.</h1><p class="intro">Enter two public product URLs. The server will try to extract model numbers and specifications, then apply your eligibility rule. Results depend on the product data each retailer exposes.</p>
+<div class="grid"><section class="card"><div class="head">01 &nbsp; Product pages</div><div class="body"><div id="error" class="err"></div>
+<div class="field"><label for="urlA">Retailer A — product URL</label><input id="urlA" type="url" placeholder="https://store.example/product-a" required></div>
+<div class="field"><label for="urlB">Retailer B — product URL</label><input id="urlB" type="url" placeholder="https://store.example/product-b" required></div>
+<div class="threshold"><label for="threshold" style="margin:0">Matching specs required</label><input id="threshold" type="number" min="1" max="100" value="10"></div>
+<button id="compare" class="btn">Compare products →</button>
+<div class="notice">The checker reads publicly accessible page data. If a retailer blocks access or renders specs dynamically, you may need to enter data manually or connect an approved product-data API.</div></div></section>
+<section class="card"><div class="head">02 &nbsp; Eligibility result</div><div id="empty" class="result-empty"><b>Ready to compare</b><p>Enter two product URLs and select Compare products.</p></div>
+<div id="result" class="result"><div id="status" class="status"><h2 id="title">—</h2><p id="reason"></p></div><div class="content"><div class="stats"><div class="stat"><small>RETAILER A</small><strong id="nameA">—</strong><small style="margin-top:9px">MODEL</small><strong id="modelA">—</strong><small style="margin-top:9px">PRICE</small><strong id="priceA">—</strong></div><div class="stat"><small>RETAILER B</small><strong id="nameB">—</strong><small style="margin-top:9px">MODEL</small><strong id="modelB">—</strong><small style="margin-top:9px">PRICE</small><strong id="priceB">—</strong></div></div><div class="sub">SPECIFICATION CHECK</div><div id="specs"></div><p id="warning" class="foot"></p><p class="foot">This is an automated comparison, not official retailer approval. Verify current price-match policies, seller, availability, shipping, condition, and exclusions.</p></div></div></section></div></main>
+<script>
+const $=id=>document.getElementById(id);
+$('compare').addEventListener('click',async()=>{
+ const a=$('urlA').value.trim(),b=$('urlB').value.trim(),threshold=Math.max(1,Math.min(100,Number($('threshold').value)||10));
+ $('error').classList.remove('show');
+ if(!a||!b){$('error').textContent='Please enter both product URLs.';$('error').classList.add('show');return}
+ $('compare').disabled=true;$('compare').textContent='Checking product pages…';
+ try{
+  const res=await fetch('/api/compare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url_a:a,url_b:b,threshold})});
+  const data=await res.json();if(!res.ok)throw new Error(data.detail||'Comparison failed.');
+  $('empty').style.display='none';$('result').classList.add('show');
+  $('status').className='status '+(data.eligible?'good':'bad');
+  $('title').textContent=data.eligible?'Price match eligible':'Price match not eligible';
+  $('reason').textContent=data.reason;
+  for(const [id,val] of Object.entries({nameA:data.product_a.name,modelA:data.product_a.model,priceA:data.product_a.price,nameB:data.product_b.name,modelB:data.product_b.model,priceB:data.product_b.price}))$(id).textContent=val||'Not found';
+  const root=$('specs');root.replaceChildren();
+  if(!data.checks.length){root.textContent='No structured specifications detected on these pages.'}
+  for(const x of data.checks){const row=document.createElement('div');row.className='spec';for(const [txt,cls] of [[x.key,'muted'],[x.a,''],[x.b,'']]){const el=document.createElement('div');el.textContent=txt;el.className=cls;row.appendChild(el)}const mark=document.createElement('div');mark.textContent=x.match?'✓':'×';mark.style.color=x.match?'var(--good)':'var(--bad)';row.appendChild(mark);root.appendChild(row)}
+  const warnings=[data.product_a.warning,data.product_b.warning].filter(Boolean);$('warning').textContent=warnings.join(' ');
+ }catch(e){$('error').textContent=e.message||'Could not compare these URLs.';$('error').classList.add('show')}
+ finally{$('compare').disabled=false;$('compare').textContent='Compare products →'}
+});
+</script></body></html>
